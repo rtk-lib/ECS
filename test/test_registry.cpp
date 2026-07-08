@@ -61,3 +61,4 @@ Test(Registry_Hardcore, benchmark_get_components) {
 
     cr_assert(true, "Benchmark completed without crashing.");
 }
+
