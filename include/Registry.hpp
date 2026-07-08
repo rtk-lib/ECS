@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <cstddef>
-#include <cassert>
+#include <Assert.hpp>
 #include "SparseArray.hpp"
 #include "ComponentType.hpp"
 
@@ -50,7 +50,7 @@ namespace rtk::ecs {
                 _pools.resize(id + 1);
             }
 
-            assert(_pools[id].pool_ptr == nullptr && "Component already registered!");
+            RTK_ASSERT(_pools[id].pool_ptr == nullptr, "Component already registered!");
 
             auto* new_pool = new SparseArray<Component>();
 
@@ -75,7 +75,7 @@ namespace rtk::ecs {
         SparseArray<Component>& get_components() {
             std::size_t id = ComponentType::get_id<Component>();
 
-            assert(id < _pools.size() && _pools[id].pool_ptr != nullptr && "Tried to get an unregistered component!");
+            RTK_ASSERT(id < _pools.size() && _pools[id].pool_ptr != nullptr, "Tried to get an unregistered component!");
 
             return *static_cast<SparseArray<Component>*>(_pools[id].pool_ptr);
         }
@@ -87,7 +87,7 @@ namespace rtk::ecs {
         const SparseArray<Component>& get_components() const {
             std::size_t id = ComponentType::get_id<Component>();
             
-            assert(id < _pools.size() && _pools[id].pool_ptr != nullptr && "Tried to get an unregistered component!");
+            RTK_ASSERT(id < _pools.size() && _pools[id].pool_ptr != nullptr, "Tried to get an unregistered component!");
             
             return *static_cast<const SparseArray<Component>*>(_pools[id].pool_ptr);
         }
