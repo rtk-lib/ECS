@@ -3,3 +3,5 @@
 #include "Logger/Logger.hpp"
 
 #include "SparseArray.hpp"
+
+#include "Registry.hpp"

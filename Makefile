@@ -1,7 +1,7 @@
 CXX = clang++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./include
+CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./include -fno-rtti
 
-TEST_SRC = test/test_ecs_creation.cpp
+TEST_SRC = $(wildcard test/*.cpp)
 TEST_OBJ = $(TEST_SRC:.cpp=.o)
 TEST_NAME = unit_tests
 
