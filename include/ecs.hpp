@@ -2,18 +2,21 @@
 
 #include "Logger/Logger.hpp"
 
-class ecs
+namespace rtk
 {
-    private:
+    class ecs
+    {
+        private:
 
-    public:
-        ecs()
-        {
-            LOG_INFO("Start ECS");
-        }
+        public:
+            ecs()
+            {
+                LOG_INFO("Start ECS");
+            }
 
-        ~ecs()
-        {
-            LOG_INFO("End ECS");
-        }
-};
+            ~ecs()
+            {
+                LOG_INFO("End ECS");
+            }
+    };
+}
