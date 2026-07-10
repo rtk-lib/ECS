@@ -79,5 +79,14 @@ namespace rtk::ecs
                 }
                 return std::nullopt;
             }
+
+            bool contains(std::size_t entity) const {
+                constexpr std::size_t null_entity = std::numeric_limits<std::size_t>::max();
+                return entity < _sparse.size() && _sparse[entity] != null_entity;
+            }
+
+            const std::vector<std::size_t>& get_packed_array() const {
+                return _packed_entities;
+            }
     };
 }

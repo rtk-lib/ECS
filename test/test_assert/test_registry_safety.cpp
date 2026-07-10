@@ -1,4 +1,5 @@
 #include <criterion/criterion.h>
+#include <criterion/redirect.h>
 #include <signal.h>
 #include "Registry.hpp"
 
@@ -6,12 +7,14 @@ struct Position { float x, y; };
 struct Velocity { float dx, dy; };
 
 Test(Registry_Safety, assert_on_unregistered_get, .signal = SIGABRT) {
+    cr_redirect_stderr();
     rtk::ecs::Registry registry;
     auto& pos_array = registry.get_components<Position>();
     (void)pos_array;
 }
 
 Test(Registry_Safety, assert_on_double_registration, .signal = SIGABRT) {
+    cr_redirect_stderr();
     rtk::ecs::Registry registry;
 
     registry.register_component<Velocity>();
@@ -20,6 +23,7 @@ Test(Registry_Safety, assert_on_double_registration, .signal = SIGABRT) {
 }
 
 Test(Registry_Entities, ID_generation_and_recycling) {
+    cr_redirect_stderr();
     rtk::ecs::Registry registry;
 
     std::size_t e0 = registry.spawn_entity();

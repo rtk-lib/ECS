@@ -8,6 +8,10 @@
 
 namespace rtk::ecs {
     
+    //fwd
+    template <typename FirstComponent, typename... OtherComponents>
+    class View;
+
     /**
      * @brief Erasure structure without any VTable overhead.
      * Holds a raw pointer to the array and static function pointers to manipulate it.
@@ -52,16 +56,16 @@ namespace rtk::ecs {
 
             RTK_ASSERT(_pools[id].pool_ptr == nullptr, "Component already registered!");
 
-            auto* new_pool = new SparseArray<Component>();
+            auto *new_pool = new SparseArray<Component>();
 
             _pools[id].pool_ptr = new_pool;
             
 
-            _pools[id].erase_fn = [](void* ptr, std::size_t entity) {
+            _pools[id].erase_fn = [](void *ptr, std::size_t entity) {
                 static_cast<SparseArray<Component>*>(ptr)->erase(entity);
             };
 
-            _pools[id].delete_fn = [](void* ptr) {
+            _pools[id].delete_fn = [](void *ptr) {
                 delete static_cast<SparseArray<Component>*>(ptr);
             };
 
@@ -131,5 +135,23 @@ namespace rtk::ecs {
 
             _dead_entities.push_back(entity);
         }
+
+        template <typename Component>
+        bool has_component(std::size_t entity) {
+            return get_components<Component>().contains(entity);
+        }
+
+        template <typename FirstComponent, typename... OtherComponents>
+        View<FirstComponent, OtherComponents...> view();
     };
 } // namespace rtk::ecs
+
+#include "View.hpp"
+
+namespace rtk::ecs {
+    template <typename FirstComponent, typename... OtherComponents>
+    View<FirstComponent, OtherComponents...> Registry::view() {
+        auto& driver_pool = get_components<FirstComponent>();
+        return View<FirstComponent, OtherComponents...>(*this, driver_pool.get_packed_array());
+    };
+}
