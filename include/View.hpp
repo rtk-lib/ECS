@@ -27,38 +27,38 @@ namespace rtk::ecs  {
                         return (_reg.has_component<OtherComponents>(entity_id) && ...);
                     }
                 }
-            
+
                 void skip_invalid() {
                     while (_index < _dense.size() && !has_all_others(_dense[_index])) {
                         _index++;
                     }
                 }
-            
+
             public:
                 Iterator(Registry& reg, const std::vector<std::size_t>& dense, std::size_t start_idx) 
                     : _reg(reg), _dense(dense), _index(start_idx) {
                     skip_invalid();
                 }
-            
+
                 Iterator& operator++() {
                     _index++;
                     skip_invalid();
                     return *this;
                 }
-            
+
                 std::size_t operator*() const {
                     return _dense[_index];
                 }
-            
+
                 bool operator!=(const Iterator& other) const {
                     return _index != other._index;
                 }
             };
-        
+
         Iterator begin() {
             return Iterator(_registry, _driver_dense_array, 0);
         }
-    
+
         Iterator end() {
             return Iterator(_registry, _driver_dense_array, _driver_dense_array.size());
         }

@@ -6,8 +6,8 @@
 #include "SparseArray.hpp"
 #include "ComponentType.hpp"
 
-namespace rtk::ecs {
-    
+namespace rtk::ecs
+{
     //fwd
     template <typename FirstComponent, typename... OtherComponents>
     class View;
@@ -59,7 +59,6 @@ namespace rtk::ecs {
             auto *new_pool = new SparseArray<Component>();
 
             _pools[id].pool_ptr = new_pool;
-            
 
             _pools[id].erase_fn = [](void *ptr, std::size_t entity) {
                 static_cast<SparseArray<Component>*>(ptr)->erase(entity);
@@ -90,9 +89,9 @@ namespace rtk::ecs {
         template <typename Component>
         const SparseArray<Component>& get_components() const {
             std::size_t id = ComponentType::get_id<Component>();
-            
+
             RTK_ASSERT(id < _pools.size() && _pools[id].pool_ptr != nullptr, "Tried to get an unregistered component!");
-            
+
             return *static_cast<const SparseArray<Component>*>(_pools[id].pool_ptr);
         }
 
