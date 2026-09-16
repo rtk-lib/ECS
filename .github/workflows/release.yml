@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Validate on ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  package:
+    name: Package headers
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Prepare package
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p "dist/rtk-ecs-${TAG}"
+          cp -R include "dist/rtk-ecs-${TAG}/include"
+
+          if [ -f README.md ]; then
+            cp README.md "dist/rtk-ecs-${TAG}/"
+          fi
+
+          if [ -f LICENSE ]; then
+            cp LICENSE "dist/rtk-ecs-${TAG}/"
+          fi
+
+          cd dist
+          cmake -E tar cf "rtk-ecs-${TAG}.zip" \
+            --format=zip "rtk-ecs-${TAG}"
+
+          cmake -E tar czf "rtk-ecs-${TAG}.tar.gz" \
+            "rtk-ecs-${TAG}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: rtk-ecs-${{ github.event.release.tag_name }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+          if-no-files-found: error
+
+      - name: Attach archives to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload "$TAG" \
+            dist/*.zip \
+            dist/*.tar.gz \
+            --clobber

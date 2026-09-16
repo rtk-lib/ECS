@@ -47,7 +47,8 @@ namespace rtk::ecs
          * @brief Registers a new component type and allocates its SparseArray.
          */
         template <typename Component>
-        SparseArray<Component>& register_component() {
+        SparseArray<Component>&
+        register_component() {
             std::size_t id = ComponentType::get_id<Component>();
 
             if (id >= _pools.size()) {
@@ -151,6 +152,9 @@ namespace rtk::ecs {
     template <typename FirstComponent, typename... OtherComponents>
     View<FirstComponent, OtherComponents...> Registry::view() {
         auto& driver_pool = get_components<FirstComponent>();
-        return View<FirstComponent, OtherComponents...>(*this, driver_pool.get_packed_array());
+        return View<FirstComponent, OtherComponents...>(
+            driver_pool.get_packed_array(),
+            get_components<OtherComponents>()...
+        );
     };
 }

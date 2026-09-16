@@ -73,11 +73,18 @@ namespace rtk::ecs
             /**
              * @brief Get a component by entity ID.
              */
-            std::optional<Component> get(std::size_t entity) const {
+            Component *get(std::size_t entity) {
                 if (entity < _sparse.size() && _sparse[entity] != NULL_ENTITY) {
-                    return _dense[_sparse[entity]];
+                    return &_dense[_sparse[entity]];
                 }
-                return std::nullopt;
+                return nullptr;
+            }
+
+            const Component *get(std::size_t entity) const {
+                if (entity < _sparse.size() && _sparse[entity] != NULL_ENTITY) {
+                    return &_dense[_sparse[entity]];
+                }
+                return nullptr;
             }
 
             bool contains(std::size_t entity) const {
