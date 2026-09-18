@@ -10,7 +10,6 @@ permissions:
 jobs:
   build:
     name: Validate on ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
@@ -47,31 +46,28 @@ jobs:
         env:
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          mkdir -p "dist/rtk-ecs-${TAG}"
-          cp -R include "dist/rtk-ecs-${TAG}/include"
+          mkdir -p "rtk_ecs/include"
+          cp -R include/* "rtk_ecs/include/"
 
           if [ -f README.md ]; then
-            cp README.md "dist/rtk-ecs-${TAG}/"
+            cp README.md "rtk_ecs/"
           fi
 
           if [ -f LICENSE ]; then
-            cp LICENSE "dist/rtk-ecs-${TAG}/"
+            cp LICENSE "rtk_ecs/"
           fi
 
-          cd dist
-          cmake -E tar cf "rtk-ecs-${TAG}.zip" \
-            --format=zip "rtk-ecs-${TAG}"
-
-          cmake -E tar czf "rtk-ecs-${TAG}.tar.gz" \
-            "rtk-ecs-${TAG}"
+          # On crée les archives avec le nom de ton tag (ex: rtk_ecs-v1.0.1.zip)
+          cmake -E tar cf "rtk_ecs-${TAG}.zip" --format=zip "rtk_ecs"
+          cmake -E tar czf "rtk_ecs-${TAG}.tar.gz" "rtk_ecs"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v7
         with:
           name: rtk-ecs-${{ github.event.release.tag_name }}
           path: |
-            dist/*.zip
-            dist/*.tar.gz
+            *.zip
+            *.tar.gz
           if-no-files-found: error
 
       - name: Attach archives to GitHub Release
@@ -80,6 +76,6 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
         run: |
           gh release upload "$TAG" \
-            dist/*.zip \
-            dist/*.tar.gz \
+            *.zip \
+            *.tar.gz \
             --clobber
