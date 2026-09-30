@@ -31,5 +31,27 @@ namespace rtk::ecs
                     reg.flush();
                 }
             }
+
+            void start(Registry &reg)
+            {
+                for (auto &stage : _stages)
+                {
+                    for (auto &system : stage)
+                    {
+                        system->onStart(reg);
+                    }
+                }
+            }
+
+            void stop(Registry &reg)
+            {
+                for (auto &stage : _stages)
+                {
+                    for (auto &system : stage)
+                    {
+                        system->onStop(reg);
+                    }
+                }
+            }
     };
 }
