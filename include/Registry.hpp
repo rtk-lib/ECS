@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <cstddef>
-#include <Assert.hpp>
+#include "Assert.hpp"
 #include "SparseArray.hpp"
 #include "ComponentType.hpp"
 
@@ -27,7 +27,7 @@ namespace rtk::ecs
         std::vector<ErasedPool> _pools;
 
         std::size_t _entities_count = 0;
-        std::vector<std::size_t> _dead_entities;
+        std::vector<std::size_t> _dead_entities;       
 
     public:
         Registry() = default;
@@ -125,15 +125,21 @@ namespace rtk::ecs
          * @brief Kills an entity, erases all its components, and recycles its ID.
          * @param entity The Entity ID to destroy.
          */
-        void kill_entity(std::size_t entity) {
+        void kill_entity(std::size_t entity) 
+        {
+            _dead_entities.push_back(entity);
+        }
 
-            for (auto& pool : _pools) {
-                if (pool.pool_ptr && pool.erase_fn) {
-                    pool.erase_fn(pool.pool_ptr, entity);
+        void flush() {
+
+            for (auto &entity : _dead_entities){
+                for (auto& pool : _pools) {
+                    if (pool.pool_ptr && pool.erase_fn) {
+                        pool.erase_fn(pool.pool_ptr, entity);
+                    }
                 }
             }
-
-            _dead_entities.push_back(entity);
+            _dead_entities.clear();
         }
 
         template <typename Component>
