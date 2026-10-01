@@ -15,7 +15,7 @@ namespace rtk::ecs
 
         public:
             template <typename T, typename ...Args>
-            T &add(Order order, Args &...args) {
+            T &add(Order order, Args &&...args) {
                 auto system = std::make_unique<T>(std::forward<Args>(args)...);
                 T &reference = *system;
                 _stages[static_cast<size_t>(order)].push_back(std::move(system));
