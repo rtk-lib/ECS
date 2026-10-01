@@ -9,7 +9,8 @@ namespace rtk::ecs
     {
         private:
         public:
-            ~ISystem() = default;
+            ISystem() = default;
+            virtual ~ISystem() = default;
             ISystem(const ISystem &s) = delete;
             ISystem &operator=(const ISystem &s) = delete;
 
