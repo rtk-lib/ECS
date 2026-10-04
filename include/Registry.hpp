@@ -17,17 +17,20 @@ namespace rtk::ecs
      * Holds a raw pointer to the array and static function pointers to manipulate it.
      */
     struct ErasedPool {
-        void* pool_ptr = nullptr;
-        void (*erase_fn)(void*, std::size_t) = nullptr;
-        void (*delete_fn)(void*) = nullptr;
+        void* poolPtr = nullptr;
+        void (*eraseFn)(void*, std::size_t) = nullptr;
+        void (*deleteFn)(void*) = nullptr;
     };
 
     class Registry {
     private:
         std::vector<ErasedPool> _pools;
 
-        std::size_t _entities_count = 0;
-        std::vector<std::size_t> _dead_entities;       
+        std::size_t _entitiesCount = 0;
+        std::vector<std::size_t> _deadEntities;
+        std::vector<std::size_t> _pendingKills;
+        std::vector<std::size_t> _freeIds;
+        std::vector<bool> _alives;
 
     public:
         Registry() = default;
@@ -37,8 +40,8 @@ namespace rtk::ecs
          */
         ~Registry() {
             for (auto& pool : _pools) {
-                if (pool.pool_ptr && pool.delete_fn) {
-                    pool.delete_fn(pool.pool_ptr);
+                if (pool.poolPtr && pool.deleteFn) {
+                    pool.deleteFn(pool.poolPtr);
                 }
             }
         }
@@ -55,21 +58,17 @@ namespace rtk::ecs
                 _pools.resize(id + 1);
             }
 
-            RTK_ASSERT(_pools[id].pool_ptr == nullptr, "Component already registered!");
+            RTK_ASSERT(_pools[id].poolPtr == nullptr, "Component already registered!");
 
-            auto *new_pool = new SparseArray<Component>();
-
-            _pools[id].pool_ptr = new_pool;
-
-            _pools[id].erase_fn = [](void *ptr, std::size_t entity) {
+            auto *newPool = new SparseArray<Component>();
+            _pools[id].poolPtr = newPool;
+            _pools[id].eraseFn = [](void *ptr, std::size_t entity) {
                 static_cast<SparseArray<Component>*>(ptr)->erase(entity);
             };
-
-            _pools[id].delete_fn = [](void *ptr) {
+            _pools[id].deleteFn = [](void *ptr) {
                 delete static_cast<SparseArray<Component>*>(ptr);
             };
-
-            return *new_pool;
+            return *newPool;
         }
 
         /**
@@ -78,10 +77,8 @@ namespace rtk::ecs
         template <typename Component>
         SparseArray<Component>& get_components() {
             std::size_t id = ComponentType::get_id<Component>();
-
-            RTK_ASSERT(id < _pools.size() && _pools[id].pool_ptr != nullptr, "Tried to get an unregistered component!");
-
-            return *static_cast<SparseArray<Component>*>(_pools[id].pool_ptr);
+            RTK_ASSERT(id < _pools.size() && _pools[id].poolPtr != nullptr, "Tried to get an unregistered component!");
+            return *static_cast<SparseArray<Component>*>(_pools[id].poolPtr);
         }
 
         /**
@@ -91,9 +88,9 @@ namespace rtk::ecs
         const SparseArray<Component>& get_components() const {
             std::size_t id = ComponentType::get_id<Component>();
 
-            RTK_ASSERT(id < _pools.size() && _pools[id].pool_ptr != nullptr, "Tried to get an unregistered component!");
+            RTK_ASSERT(id < _pools.size() && _pools[id].poolPtr != nullptr, "Tried to get an unregistered component!");
 
-            return *static_cast<const SparseArray<Component>*>(_pools[id].pool_ptr);
+            return *static_cast<const SparseArray<Component>*>(_pools[id].poolPtr);
         }
 
         /**
@@ -102,8 +99,8 @@ namespace rtk::ecs
          */
         void remove_entity_from_all_pools(std::size_t entity) {
             for (auto& pool : _pools) {
-                if (pool.pool_ptr && pool.erase_fn) {
-                    pool.erase_fn(pool.pool_ptr, entity);
+                if (pool.poolPtr && pool.eraseFn) {
+                    pool.eraseFn(pool.poolPtr, entity);
                 }
             }
         }
@@ -113,12 +110,12 @@ namespace rtk::ecs
          * @return std::size_t The unique Entity ID.
          */
         std::size_t spawn_entity() {
-            if (!_dead_entities.empty()) {
-                std::size_t recycled_id = _dead_entities.back();
-                _dead_entities.pop_back();
+            if (!_deadEntities.empty()) {
+                std::size_t recycled_id = _deadEntities.back();
+                _deadEntities.pop_back();
                 return recycled_id;
             }
-            return _entities_count++;
+            return _entitiesCount++;
         }
 
         /**
@@ -127,19 +124,21 @@ namespace rtk::ecs
          */
         void kill_entity(std::size_t entity) 
         {
-            _dead_entities.push_back(entity);
+            if (entity < _alives.size() && _alives[entity]) {
+                _pendingKills.push_back(entity);
+            }
         }
 
         void flush() {
 
-            for (auto &entity : _dead_entities){
-                for (auto& pool : _pools) {
-                    if (pool.pool_ptr && pool.erase_fn) {
-                        pool.erase_fn(pool.pool_ptr, entity);
-                    }
-                }
+            for (std::size_t entity : _pendingKills){
+                if (_alives[entity])
+                    continue;
+                _alives[entity] = false;
+                remove_entity_from_all_pools(entity); 
+                _freeIds.push_back(entity);
             }
-            _dead_entities.clear();
+            _pendingKills.clear();
         }
 
         template <typename Component>
@@ -157,9 +156,9 @@ namespace rtk::ecs
 namespace rtk::ecs {
     template <typename FirstComponent, typename... OtherComponents>
     View<FirstComponent, OtherComponents...> Registry::view() {
-        auto& driver_pool = get_components<FirstComponent>();
+        auto& driverPool = get_components<FirstComponent>();
         return View<FirstComponent, OtherComponents...>(
-            driver_pool.get_packed_array(),
+            driverPool.get_packed_array(),
             get_components<OtherComponents>()...
         );
     };
