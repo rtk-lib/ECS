@@ -110,14 +110,16 @@ namespace rtk::ecs
          * @return std::size_t The unique Entity ID.
          */
         std::size_t spawn_entity() {
-            if (!_deadEntities.empty()) {
-                std::size_t recycled_id = _deadEntities.back();
-                _deadEntities.pop_back();
-                return recycled_id;
+            if (!_freeIds.empty()) {
+                std::size_t id = _freeIds.back();
+                _freeIds.pop_back();
+                _alives[id] = true;
+                return id;
             }
+            _alives.push_back(true);
             return _entitiesCount++;
         }
-
+        
         /**
          * @brief Kills an entity, erases all its components, and recycles its ID.
          * @param entity The Entity ID to destroy.
