@@ -119,7 +119,7 @@ namespace rtk::ecs
             _alives.push_back(true);
             return _entitiesCount++;
         }
-        
+
         /**
          * @brief Kills an entity, erases all its components, and recycles its ID.
          * @param entity The Entity ID to destroy.
@@ -134,7 +134,7 @@ namespace rtk::ecs
         void flush() {
 
             for (std::size_t entity : _pendingKills){
-                if (_alives[entity])
+                if (!_alives[entity])
                     continue;
                 _alives[entity] = false;
                 remove_entity_from_all_pools(entity); 
