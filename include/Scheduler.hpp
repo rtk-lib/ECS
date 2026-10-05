@@ -7,7 +7,7 @@
 
 namespace rtk::ecs
 {
-    enum class Order {Input, Update, Physics, SndUpdate, Render, Size};
+    enum class Order {Input, Update, Physics, SecondUpdate, Render, Size};
 
     class Scheduler {
         private:
