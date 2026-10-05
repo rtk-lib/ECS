@@ -2,8 +2,10 @@
 
 #include <vector>
 #include <tuple>
+#include "SparseArray.hpp"
 
 namespace rtk::ecs {
+
     template <typename FirstComponent, typename... OtherComponents>
     class View {
     private:
