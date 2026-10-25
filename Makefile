@@ -3,7 +3,13 @@ CXX = clang++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./include -I./test -fno-rtti -O3 -march=native -flto=auto
 LDFLAGS = -lcriterion -flto=auto
 
-TEST_SRC = $(wildcard test/*.cpp)
+CRITERION_PREFIX ?= $(shell brew --prefix criterion 2>/dev/null)
+ifneq ($(CRITERION_PREFIX),)
+CXXFLAGS += -I$(CRITERION_PREFIX)/include
+LDFLAGS += -L$(CRITERION_PREFIX)/lib
+endif
+
+TEST_SRC = $(filter-out test/smoke_test.cpp, $(wildcard test/*.cpp))
 TEST_OBJ = $(TEST_SRC:.cpp=.o)
 TEST_NAME = unit_tests
 

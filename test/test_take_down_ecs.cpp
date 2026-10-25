@@ -60,7 +60,7 @@ Test(sparse_array, insert_stores_correct_value)
     SparseArray<Position> sa;
     sa.insert_at(2, Position{7.f, 8.f});
     auto val = sa.get(2);
-    cr_assert(val.has_value());
+    cr_assert(val != nullptr);
     cr_assert_eq(val->x, 7.f);
     cr_assert_eq(val->y, 8.f);
 }
@@ -71,7 +71,7 @@ Test(sparse_array, insert_overwrite_updates_value)
     sa.insert_at(1, Position{1.f, 1.f});
     sa.insert_at(1, Position{9.f, 9.f});
     auto val = sa.get(1);
-    cr_assert(val.has_value());
+    cr_assert(val != nullptr);
     cr_assert_eq(val->x, 9.f);
     cr_assert_eq(val->y, 9.f);
 }
@@ -87,14 +87,14 @@ Test(sparse_array, insert_overwrite_does_not_grow_size)
 Test(sparse_array, get_on_empty_array_returns_nullopt)
 {
     SparseArray<Position> sa;
-    cr_assert_eq(sa.get(0).has_value(), false);
+    cr_assert_eq(sa.get(0) != nullptr, false);
 }
 
 Test(sparse_array, get_unset_entity_returns_nullopt)
 {
     SparseArray<Position> sa;
     sa.insert_at(5, Position{1.f, 1.f});
-    cr_assert_eq(sa.get(6).has_value(), false);
+    cr_assert_eq(sa.get(6) != nullptr, false);
 }
 
 Test(sparse_array, contains_true_after_insert)
@@ -138,7 +138,7 @@ Test(sparse_array, erase_makes_get_return_nullopt)
     SparseArray<Position> sa;
     sa.insert_at(1, Position{0.f, 0.f});
     sa.erase(1);
-    cr_assert_eq(sa.get(1).has_value(), false);
+    cr_assert_eq(sa.get(1) != nullptr, false);
 }
 
 Test(sparse_array, erase_only_element_empties_array)
@@ -160,8 +160,8 @@ Test(sparse_array, erase_swap_pop_keeps_other_entity_readable)
     cr_assert(sa.contains(2));
     auto v1 = sa.get(1);
     auto v2 = sa.get(2);
-    cr_assert(v1.has_value());
-    cr_assert(v2.has_value());
+    cr_assert(v1 != nullptr);
+    cr_assert(v2 != nullptr);
     cr_assert_eq(v1->x, 2.f);
     cr_assert_eq(v2->x, 3.f);
 }
@@ -214,7 +214,7 @@ Test(sparse_array, reinsert_after_erase_works)
     sa.insert_at(0, Position{5.f, 5.f});
     cr_assert(sa.contains(0));
     auto v = sa.get(0);
-    cr_assert(v.has_value());
+    cr_assert(v != nullptr);
     cr_assert_eq(v->x, 5.f);
 }
 
@@ -226,7 +226,7 @@ Test(sparse_array, multiple_distinct_entities_all_retrievable)
     cr_assert_eq(sa.size(), 10u);
     for (std::size_t i = 0; i < 10; ++i) {
         auto v = sa.get(i);
-        cr_assert(v.has_value());
+        cr_assert(v != nullptr);
         cr_assert_eq(v->x, (float)i);
     }
 }
@@ -321,6 +321,7 @@ Test(registry_entities, kill_entity_allows_id_recycling)
     Registry reg;
     std::size_t e0 = reg.spawn_entity();
     reg.kill_entity(e0);
+    reg.flush();
     std::size_t e1 = reg.spawn_entity();
     cr_assert_eq(e0, e1);
 }
@@ -331,6 +332,7 @@ Test(registry_entities, recycled_id_reused_before_new_one_allocated)
     std::size_t e0 = reg.spawn_entity();
     std::size_t e1 = reg.spawn_entity();
     reg.kill_entity(e0);
+    reg.flush();
     std::size_t e2 = reg.spawn_entity();
     cr_assert_eq(e2, e0);
     cr_assert_neq(e2, e1);
@@ -345,6 +347,7 @@ Test(registry_entities, killing_multiple_entities_all_recyclable)
     reg.kill_entity(e0);
     reg.kill_entity(e1);
     reg.kill_entity(e2);
+    reg.flush();
     std::size_t n0 = reg.spawn_entity();
     std::size_t n1 = reg.spawn_entity();
     std::size_t n2 = reg.spawn_entity();
@@ -362,6 +365,7 @@ Test(registry_entities, kill_entity_removes_data_from_registered_pool)
     std::size_t e = reg.spawn_entity();
     reg.get_components<Position>().insert_at(e, Position{1.f, 1.f});
     reg.kill_entity(e);
+    reg.flush();
     cr_assert_not(reg.has_component<Position>(e));
 }
 
@@ -374,6 +378,7 @@ Test(registry_entities, kill_entity_removes_data_from_all_registered_pools)
     reg.get_components<Position>().insert_at(e, Position{1.f, 1.f});
     reg.get_components<Velocity>().insert_at(e, Velocity{2.f, 2.f});
     reg.kill_entity(e);
+    reg.flush();
     cr_assert_not(reg.has_component<Position>(e));
     cr_assert_not(reg.has_component<Velocity>(e));
 }
@@ -387,6 +392,7 @@ Test(registry_entities, kill_entity_does_not_affect_other_entities_data)
     reg.get_components<Position>().insert_at(e0, Position{1.f, 1.f});
     reg.get_components<Position>().insert_at(e1, Position{2.f, 2.f});
     reg.kill_entity(e0);
+    reg.flush();
     cr_assert(reg.has_component<Position>(e1));
 }
 
@@ -486,7 +492,7 @@ Test(registry_components, insert_overwrite_through_registry_updates_value)
     reg.get_components<Health>().insert_at(e, Health{50});
     reg.get_components<Health>().insert_at(e, Health{75});
     auto v = reg.get_components<Health>().get(e);
-    cr_assert(v.has_value());
+    cr_assert(v != nullptr);
     cr_assert_eq(v->hp, 75);
 }
 
@@ -602,6 +608,7 @@ Test(registry_view, view_excludes_killed_entity)
     reg.get_components<Position>().insert_at(e1, Position{1.f, 1.f});
 
     reg.kill_entity(e0);
+    reg.flush();
 
     std::size_t count = 0;
     for (auto entity : reg.view<Position>()) {
@@ -682,6 +689,7 @@ Test(registry_integration, full_lifecycle_spawn_attach_detach_kill)
     cr_assert(reg.has_component<Position>(e));
 
     reg.kill_entity(e);
+    reg.flush();
     cr_assert_not(reg.has_component<Position>(e));
 
     std::size_t e2 = reg.spawn_entity();
@@ -698,13 +706,14 @@ Test(registry_integration, spawn_kill_spawn_keeps_pool_consistent)
     reg.get_components<Health>().insert_at(e0, Health{10});
 
     reg.kill_entity(e0);
+    reg.flush();
 
     std::size_t e1 = reg.spawn_entity();
     cr_assert_not(reg.has_component<Health>(e1));
 
     reg.get_components<Health>().insert_at(e1, Health{99});
     auto v = reg.get_components<Health>().get(e1);
-    cr_assert(v.has_value());
+    cr_assert(v != nullptr);
     cr_assert_eq(v->hp, 99);
 }
 
@@ -727,6 +736,7 @@ Test(registry_integration, many_entities_mixed_components_view_stays_correct_aft
     reg.get_components<Position>().insert_at(alive_pos_only, Position{0.f, 0.f});
 
     reg.kill_entity(dead_both);
+    reg.flush();
 
     std::size_t count = 0;
     for (auto entity : reg.view<Position, Velocity>()) {
@@ -749,6 +759,7 @@ Test(registry_integration, stress_spawn_and_kill_hundreds_of_entities)
     }
     for (std::size_t i = 0; i < ids.size(); i += 2)
         reg.kill_entity(ids[i]);
+    reg.flush();
 
     std::size_t count = 0;
     for (auto entity : reg.view<Position>()) {
@@ -838,7 +849,7 @@ Test(chrono_perf, sparse_array_get_lookup_10k)
     {
         PROFILE_SCOPE("sparse_array_get_lookup_10k");
         for (std::size_t i = 0; i < 10000; ++i)
-            if (sa.get(i).has_value())
+            if (sa.get(i) != nullptr)
                 ++found;
     }
     cr_assert_eq(found, 10000u);
@@ -875,6 +886,7 @@ Test(chrono_perf, kill_entity_10k)
         PROFILE_SCOPE("kill_entity_10k");
         for (auto e : ids)
             reg.kill_entity(e);
+        reg.flush();
     }
     cr_assert_eq(reg.get_components<Position>().size(), 0u);
     cr_assert_eq(reg.get_components<Health>().size(), 0u);

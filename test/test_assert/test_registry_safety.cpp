@@ -35,6 +35,7 @@ Test(Registry_Entities, ID_generation_and_recycling) {
     cr_assert_eq(e2, 2, "Third entity should be ID 2");
 
     registry.kill_entity(e1);
+    registry.flush();
 
     std::size_t e3 = registry.spawn_entity();
     

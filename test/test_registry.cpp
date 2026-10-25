@@ -14,8 +14,8 @@ Test(Registry_Hardcore, raw_pointer_cast_and_insert) {
     pos_array.insert_at(5, {10.5f, 20.5f});
 
     cr_assert_eq(pos_array.size(), 1, "The dense array should contain exactly 1 element.");
-    cr_assert(pos_array.get(5).has_value(), "Entity 5 should possess a Position component.");
-    cr_assert_float_eq(pos_array.get(5).value().x, 10.5f, 0.0001, "Position X should perfectly match.");
+    cr_assert(pos_array.get(5) != nullptr, "Entity 5 should possess a Position component.");
+    cr_assert_float_eq(pos_array.get(5)->x, 10.5f, 0.0001, "Position X should perfectly match.");
 }
 
 Test(Registry_Hardcore, global_entity_destruction) {
@@ -38,12 +38,12 @@ Test(Registry_Hardcore, global_entity_destruction) {
     registry.remove_entity_from_all_pools(1);
 
     cr_assert_eq(pos_array.size(), 2, "Position array size should drop from 3 to 2.");
-    cr_assert_not(pos_array.get(1).has_value(), "Entity 1's Position should be completely erased.");
-    cr_assert_float_eq(pos_array.get(3).value().x, 30.0f, 0.0001, "Entity 3's Position data should remain intact after the swap.");
+    cr_assert_not(pos_array.get(1) != nullptr, "Entity 1's Position should be completely erased.");
+    cr_assert_float_eq(pos_array.get(3)->x, 30.0f, 0.0001, "Entity 3's Position data should remain intact after the swap.");
 
     cr_assert_eq(vel_array.size(), 1, "Velocity array size should drop from 2 to 1.");
-    cr_assert_not(vel_array.get(1).has_value(), "Entity 1's Velocity should be completely erased.");
-    cr_assert_float_eq(vel_array.get(3).value().dx, 3.0f, 0.0001, "Entity 3's Velocity data should remain intact after the swap.");
+    cr_assert_not(vel_array.get(1) != nullptr, "Entity 1's Velocity should be completely erased.");
+    cr_assert_float_eq(vel_array.get(3)->dx, 3.0f, 0.0001, "Entity 3's Velocity data should remain intact after the swap.");
 }
 
 Test(Registry_Hardcore, benchmark_get_components) {
